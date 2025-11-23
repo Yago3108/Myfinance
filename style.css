@@ -1,0 +1,34 @@
+
+.navbar-custom {
+    background-color:#0D47A1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.navbar-custom .nav-link, .navbar-custom .navbar-brand {
+    color: white !important;
+    margin-left: 10px;
+}
+#image{
+    min-width: 200px;
+   max-width: 300px;
+    height: auto;
+     margin-top: 20px;
+}
+#hero {
+    background:linear-gradient(135deg, #0D47A1 0%, #001f50 100%);
+    color: white;
+    padding: 100px 0;
+    min-height: calc(100vh - 56px); 
+    display: flex;
+    align-items: center;
+}
+.btn-cadastro{
+    background-color: #1565C0; 
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+.btn-cadastro:hover {
+    background-color: #0D47A1;
+}
