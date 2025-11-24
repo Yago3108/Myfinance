@@ -49,7 +49,7 @@
             <button type="submit" class="btn btn-register w-100">Criar Minha Conta</button>
             
             <div class="mt-3 text-center">
-                <small class="text-muted">Já tem uma conta? <a href="#" class="text-decoration-none" style="color: var(--dark-blue-primary);">Faça login aqui</a></small>
+                <small class="text-muted">Já tem uma conta? <a href="login.php" class="text-decoration-none" style="color: var(--dark-blue-primary);">Faça login aqui</a></small>
             </div>
 
         </form>
