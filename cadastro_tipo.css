@@ -1,0 +1,30 @@
+  :root {
+            --color-ganho: #3251b6;
+            --color-gasto: #080d53;
+        }
+        body {
+            background: linear-gradient(135deg, #0D47A1 0%, #001f50 100%);
+            min-height: 100vh;
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+        .card-cadastro {
+            max-width: 900px;
+            width: 95%;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(62, 65, 116, 0.4);
+        }
+        .btn-submit {
+            background-color:  #1565C0;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #0D47A1;
+        }
+        .list-group-item-ganho { border-left: 4px solid var(--color-ganho); }
+        .list-group-item-gasto { border-left: 4px solid var(--color-gasto); }
+        .btn-delete { color: #fff; background-color: var(--color-gasto); border: none; padding: 5px 10px; border-radius: 5px; }
+        .btn-delete:hover {
+             background-color: #c82333;
+            color: white; }
