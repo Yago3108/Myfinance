@@ -1,0 +1,47 @@
+  :root {
+            --dark-blue-primary: #1e3a8a; 
+            --dark-blue-light: #3b82f6; 
+            --color-ganho: #515bbd; 
+            --color-gasto: #0c27c0; 
+            --color-bg-light: #f9fafb;
+        }
+
+        body {
+            background-color: var(--color-bg-light);
+            min-height: 100vh;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin-top: 5vh;
+        }
+
+        .btn-cadastro {
+            background-color: var(--color-ganho);
+            border: none;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-cadastro:hover {
+            background-color: #059669; /* Verde um pouco mais escuro */
+        }
+        
+        .modal-header {
+            background-color: var(--dark-blue-primary);
+            color: white;
+        }
+
+        .modal-title .fa-solid {
+            margin-right: 10px;
+        }
+
+        /* Estilo para destacar as opções Ganho/Gasto no formulário */
+        #tipoGanho:checked ~ label[for="tipoGanho"] {
+            color: var(--color-ganho);
+            font-weight: bold;
+        }
+        #tipoGasto:checked ~ label[for="tipoGasto"] {
+            color: var(--color-gasto);
+            font-weight: bold;
+        }

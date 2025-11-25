@@ -6,9 +6,6 @@ require_once "conexao.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = mysqli_real_escape_string($conn, $_POST["email"]);
     $senha = mysqli_real_escape_string($conn, $_POST["senha"]);
-    
-    // --- 3. PRIMEIRA CONSULTA: Verifica a existência do usuário ---
-    // Consulta para verificar se a combinação email/senha existe
     $sql = "SELECT id, istipocadastrado FROM usuarios WHERE email = '$email' AND senha = '$senha'";
     $resultado = mysqli_query($conn, $sql);
     
@@ -19,9 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
  
             $_SESSION['logado'] = true;
-            $_SESSION['user_id'] = $usuario['id']; 
+            $_SESSION['idUsuario'] = $usuario['id']; 
             
-            if($usuario["istipocadastrado"] == 1){
+            if($usuario["istipocadastrado"] == 0){
                 header("Location: cadastro_tipo.php");
                 exit(); 
             } else {

@@ -25,7 +25,7 @@
         $senha = $_POST["senha"];
         $telefone = $_POST["telefone"];
         $data_nascimento = $_POST['data_nascimento'];
-        $tipocadastrado = 1;
+        $tipocadastrado = 0;
 
         $sql= "INSERT INTO `usuarios`( `nome`, `email`, `telefone`, `senha`, `data_nascimento`,`istipocadastrado`)
          VALUES ('$nome','$email','$telefone','$senha','$data_nascimento','$tipocadastrado')";

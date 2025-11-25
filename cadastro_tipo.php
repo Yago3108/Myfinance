@@ -1,115 +1,166 @@
 <?php
 session_start();
-
 require_once 'conexao.php'; 
 
-$tipos_padrao = [
-    ['nome' => 'Salário', 'tipo' => 'G', 'id' => ''],
-    ['nome' => 'Investimentos', 'tipo' => 'G', 'id' => 'default_g2'],
-    ['nome' => 'Renda Extra', 'tipo' => 'G', 'id' => 'default_g3'],
-    ['nome' => 'Aluguel/Moradia', 'tipo' => 'D', 'id' => 'default_d1'],
-    ['nome' => 'Alimentação', 'tipo' => 'D', 'id' => 'default_d2'],
-    ['nome' => 'Transporte', 'tipo' => 'D', 'id' => 'default_d3'],
-    ['nome' => 'Lazer', 'tipo' => 'D', 'id' => 'default_d4'],
-    ['nome' => 'Saúde', 'tipo' => 'D', 'id' => 'default_d5'],
-];
+$mensagem = "";
 
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
+if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true || !isset($_SESSION["idUsuario"])) {
     header("Location: login.php"); 
     exit();
 }
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome_tipo = mysqli_real_escape_string($conn, trim($_POST['nome_tipo']));
-    $tipo = mysqli_real_escape_string($conn, $_POST['tipo']); // 'G' para Ganho, 'D' para Despesa
-    if (empty($nome_tipo) || empty($tipo)) {
-        $mensagem = "<div class='alert alert-danger'>Por favor, preencha o nome do tipo e selecione Gasto ou Ganho.</div>";
-    } else {
-        $sql_insert = "INSERT INTO Tipos (idUsuario, nome, tipo) VALUES (?, ?, ?)";
-        $stmt_insert = mysqli_prepare($conn, $sql_insert);
-        mysqli_stmt_bind_param($stmt_insert, "iss", $user_id, $nome_tipo, $tipo);
-        
-        if (mysqli_stmt_execute($stmt_insert)) {
-            // Se a inserção for bem-sucedida, atualiza a flag para 1
-            $sql_update_flag = "UPDATE usuarios SET istipocadastrado = 1 WHERE id = ?";
-            $stmt_update_flag = mysqli_prepare($conn, $sql_update_flag);
-            mysqli_stmt_bind_param($stmt_update_flag, "i", $user_id);
-            mysqli_stmt_execute($stmt_update_flag);
-            mysqli_stmt_close($stmt_update_flag);
-            
-            $mensagem = "<div class='alert alert-success'>Tipo de transação **$nome_tipo** ($tipo) cadastrado com sucesso!</div>";
-        } else {
-            $mensagem = "<div class='alert alert-danger'>Erro ao cadastrar tipo: " . mysqli_error($conn) . "</div>";
-        }
-        
-        mysqli_stmt_close($stmt_insert);
-    }
-}
 
-$mensagem = "";
-$user_id = $_SESSION['user_id']; 
+$user_id = $_SESSION["idUsuario"];
+
+$tipos_padrao_insert = [
+    ['nome' => 'Salário', 'tipo' => 'G'],
+    ['nome' => 'Investimentos', 'tipo' => 'G'],
+    ['nome' => 'Renda Extra', 'tipo' => 'G'],
+    ['nome' => 'Aluguel/Moradia', 'tipo' => 'D'],
+    ['nome' => 'Alimentação', 'tipo' => 'D'],
+    ['nome' => 'Transporte', 'tipo' => 'D'],
+    ['nome' => 'Lazer', 'tipo' => 'D'],
+    ['nome' => 'Saúde', 'tipo' => 'D'],
+    ['nome' => 'Contas de Consumo', 'tipo' => 'D'], 
+];
+
+$tipos_padrao_ref = [];
+foreach ($tipos_padrao_insert as $tipo) {
+    $tipos_padrao_ref[$tipo['nome']] = $tipo['tipo'];
+}
+$sql_check = "SELECT idTipo FROM Tipos WHERE idUsuario = ? AND nome = ? AND tipo = ?";
+$stmt_check = mysqli_prepare($conn, $sql_check);
+
+$sql_insert = "INSERT INTO Tipos (idUsuario, nome, tipo) VALUES (?, ?, ?)";
+$stmt_insert = mysqli_prepare($conn, $sql_insert);
+
+if ($stmt_check === false || $stmt_insert === false) {
+    $mensagem .= "<div class='alert alert-danger'>Erro fatal ao preparar statements: " . mysqli_error($conn) . "</div>";
+} else {
+    $inseridos_count = 0;
+    
+    foreach ($tipos_padrao_insert as $tipo) {
+        $nome = $tipo['nome'];
+        $tipoChar = $tipo['tipo'];
+        mysqli_stmt_bind_param($stmt_check, "iss", $user_id, $nome, $tipoChar);
+        mysqli_stmt_execute($stmt_check);
+        mysqli_stmt_store_result($stmt_check);
+
+        if (mysqli_stmt_num_rows($stmt_check) == 0) {
+            mysqli_stmt_bind_param($stmt_insert, "iss", $user_id, $nome, $tipoChar);
+
+            if (mysqli_stmt_execute($stmt_insert)) {
+                $inseridos_count++;
+            }
+        }
+        mysqli_stmt_free_result($stmt_check);
+    }
+    
+    if ($inseridos_count > 0) {
+        $mensagem .= "<div class='alert alert-info'>$inseridos_count categorias padrão foram adicionadas à sua conta.</div>";
+    }
+
+    mysqli_stmt_close($stmt_check);
+    mysqli_stmt_close($stmt_insert);
+}
 
 if (isset($_GET['acao']) && $_GET['acao'] == 'deletar' && isset($_GET['id'])) {
     
     $tipo_id = (int)$_GET['id'];
-    
-    $sql_delete = "DELETE FROM Tipos WHERE idTipo = ? AND idUsuario = ?";
-    $stmt_delete = mysqli_prepare($conn, $sql_delete);
+    $sql_fetch_delete = "SELECT nome, tipo FROM Tipos WHERE idTipo = ? AND idUsuario = ?";
+    $stmt_fetch_delete = mysqli_prepare($conn, $sql_fetch_delete);
+    mysqli_stmt_bind_param($stmt_fetch_delete, "ii", $tipo_id, $user_id);
+    mysqli_stmt_execute($stmt_fetch_delete);
+    $resultado_delete = mysqli_stmt_get_result($stmt_fetch_delete);
+    $tipo_info = mysqli_fetch_assoc($resultado_delete);
+    mysqli_stmt_close($stmt_fetch_delete);
 
-    mysqli_stmt_bind_param($stmt_delete, "ii", $tipo_id, $user_id);
-    
-    if (mysqli_stmt_execute($stmt_delete)) {
-        if (mysqli_stmt_affected_rows($stmt_delete) > 0) {
-            $mensagem = "<div class='alert alert-warning'>Tipo de transação excluído com sucesso!</div>";
-        } else {
-            $mensagem = "<div class='alert alert-danger'>Erro: O tipo de transação não existe ou você não tem permissão para excluí-lo.</div>";
-        }
+    if (!$tipo_info) {
+        $mensagem = "<div class='alert alert-danger'>Erro: O tipo de transação não existe ou você não tem permissão para excluí-lo.</div>";
     } else {
-        $mensagem = "<div class='alert alert-danger'>Erro ao excluir tipo: " . mysqli_error($conn) . "</div>";
-    }
+
+        if (array_key_exists($tipo_info['nome'], $tipos_padrao_ref) && $tipos_padrao_ref[$tipo_info['nome']] === $tipo_info['tipo']) {
+             $mensagem = "<div class='alert alert-warning'>Categoria **" . htmlspecialchars($tipo_info['nome']) . "** não pode ser excluída, pois é um tipo padrão do sistema.</div>";
+        } else {
+
+            $sql_delete = "DELETE FROM Tipos WHERE idTipo = ? AND idUsuario = ?";
+            $stmt_delete = mysqli_prepare($conn, $sql_delete);
+            mysqli_stmt_bind_param($stmt_delete, "ii", $tipo_id, $user_id);
+            
+            if (mysqli_stmt_execute($stmt_delete)) {
+                if (mysqli_stmt_affected_rows($stmt_delete) > 0) {
+                    $mensagem = "<div class='alert alert-success'>Categoria **" . htmlspecialchars($tipo_info['nome']) . "** excluída com sucesso!</div>";
+                } else {
+                    $mensagem = "<div class='alert alert-danger'>Erro ao excluir: Nenhuma linha afetada.</div>";
+                }
+            } else {
     
-    mysqli_stmt_close($stmt_delete);
+                $erro_bd = mysqli_error($conn);
+                if (strpos($erro_bd, 'foreign key constraint fails') !== false) {
+                     $mensagem = "<div class='alert alert-danger'>**Erro de Integridade:** Não foi possível excluir a categoria **" . htmlspecialchars($tipo_info['nome']) . "**. Existem transações vinculadas a ela. Exclua as transações primeiro.</div>";
+                } else {
+                    $mensagem = "<div class='alert alert-danger'>Erro ao excluir tipo: " . $erro_bd . "</div>";
+                }
+            }
+            mysqli_stmt_close($stmt_delete);
+        }
+    }
 }
-
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome_tipo = mysqli_real_escape_string($conn, trim($_POST['nome_tipo']));
-    $tipo = mysqli_real_escape_string($conn, $_POST['tipo']);
+    
+
+    
+    $nome_tipo = mysqli_real_escape_string($conn, trim($_POST['nome_tipo'] ?? ''));
+    $tipo = mysqli_real_escape_string($conn, $_POST['tipo'] ?? '');
 
     if (empty($nome_tipo) || empty($tipo)) {
         $mensagem = "<div class='alert alert-danger'>Por favor, preencha o nome do tipo e selecione Gasto ou Ganho.</div>";
     } else {
-        $sql_insert = "INSERT INTO Tipos (idUsuario, nome, tipo) VALUES (?, ?, ?)";
-        $stmt_insert = mysqli_prepare($conn, $sql_insert);
-        
-        mysqli_stmt_bind_param($stmt_insert, "iss", $user_id, $nome_tipo, $tipo);
-        
-        if (mysqli_stmt_execute($stmt_insert)) {
-            $mensagem = "<div class='alert alert-success'>Tipo de transação **$nome_tipo** ($tipo) cadastrado com sucesso!</div>";
+        $sql_check_custom = "SELECT idTipo FROM Tipos WHERE idUsuario = ? AND nome = ?";
+        $stmt_check_custom = mysqli_prepare($conn, $sql_check_custom);
+        mysqli_stmt_bind_param($stmt_check_custom, "is", $user_id, $nome_tipo);
+        mysqli_stmt_execute($stmt_check_custom);
+        mysqli_stmt_store_result($stmt_check_custom);
+
+        if (mysqli_stmt_num_rows($stmt_check_custom) > 0) {
+             $mensagem = "<div class='alert alert-warning'>A categoria **" . htmlspecialchars($nome_tipo) . "** já existe.</div>";
         } else {
+
+            $sql_insert_custom = "INSERT INTO Tipos (idUsuario, nome, tipo) VALUES (?, ?, ?)";
+            $stmt_insert_custom = mysqli_prepare($conn, $sql_insert_custom);
             
-            $mensagem = "<div class='alert alert-danger'>Erro ao cadastrar tipo: " . mysqli_error($conn) . "</div>";
+            mysqli_stmt_bind_param($stmt_insert_custom, "iss", $user_id, $nome_tipo, $tipo);
+            
+            if (mysqli_stmt_execute($stmt_insert_custom)) {
+                $mensagem = "<div class='alert alert-success'>Categoria " . htmlspecialchars($nome_tipo) . " cadastrada com sucesso!</div>";
+            } else {
+                $mensagem = "<div class='alert alert-danger'>Erro ao cadastrar tipo: " . mysqli_error($conn) . "</div>";
+            }
+            mysqli_stmt_close($stmt_insert_custom);
         }
-        
-        mysqli_stmt_close($stmt_insert);
+        mysqli_stmt_close($stmt_check_custom);
     }
 }
-$tipos_usuario = [];
-$sql_fetch = "SELECT idTipo AS id, nome, tipo FROM Tipos WHERE idUsuario = ?";
+$tipos_usuario_db = [];
+$sql_fetch = "SELECT idTipo AS id, nome, tipo FROM Tipos WHERE idUsuario = ? ORDER BY tipo DESC, nome ASC";
 $stmt_fetch = mysqli_prepare($conn, $sql_fetch);
 mysqli_stmt_bind_param($stmt_fetch, "i", $user_id);
 mysqli_stmt_execute($stmt_fetch);
 $resultado = mysqli_stmt_get_result($stmt_fetch);
 
 while ($row = mysqli_fetch_assoc($resultado)) {
-    $row['custom'] = true; 
-    $tipos_usuario[] = $row;
+    $row['custom'] = true;
+
+
+    if (array_key_exists($row['nome'], $tipos_padrao_ref) && $tipos_padrao_ref[$row['nome']] === $row['tipo']) {
+  
+        unset($row['custom']);
+    }
+    $tipos_usuario_db[] = $row;
 }
 
 mysqli_stmt_close($stmt_fetch);
-$todos_tipos = array_merge($tipos_padrao, $tipos_usuario);
-
-$ganhos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'G');
-$gastos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'D');
+$ganhos_list = array_filter($tipos_usuario_db, fn($t) => $t['tipo'] === 'G');
+$gastos_list = array_filter($tipos_usuario_db, fn($t) => $t['tipo'] === 'D');
 
 ?>
 
@@ -118,9 +169,9 @@ $gastos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'D');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Tipos de Transação - MyFinance</title>
+    <title>Gerenciar Categorias - MyFinance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="cadastro_tipo.css">
+    <link rel="stylesheet" href="cadastro_tipo.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -130,23 +181,18 @@ $gastos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'D');
         <h2 class="text-center mb-4" style="color: var(--dark-blue-primary); font-weight: 700;">
             Gerenciar Categorias
         </h2>
-
         <?php echo $mensagem;?>
-
         <div class="row">
-            
             <div class="col-lg-5 mb-4 mb-lg-0">
-                <div class="p-3 border rounded shadow-sm">
+                <div class="p-3 border rounded shadow-sm bg-white">
                     <h4 class="mb-3 text-center" style="color: var(--dark-blue-light);">Adicionar Nova Categoria</h4>
                     <form method="POST" action="cadastro_tipo.php">
                         
-                    
                         <div class="mb-3">
                             <label for="nome_tipo" class="form-label">Nome da Categoria</label>
                             <input type="text" class="form-control" id="nome_tipo" name="nome_tipo" placeholder="Ex: Renda Passiva" required>
                         </div>
 
-            
                         <div class="mb-4">
                             <label class="form-label d-block">Tipo:</label>
                             <div class="form-check form-check-inline">
@@ -165,46 +211,42 @@ $gastos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'D');
                     </form>
                 </div>
             </div>
-
-            <!-- COLUNA DIREITA: LISTA DE TIPOS CADASTRADOS -->
             <div class="col-lg-7">
-                <div class="p-3 border rounded shadow-sm">
+                <div class="p-3 border rounded shadow-sm bg-white">
                     <h4 class="mb-3 text-center" style="color: var(--dark-blue-light);">Minhas Categorias</h4>
                     
                     <div class="row">
-                        <!-- Lista de Ganhos -->
+        
                         <div class="col-md-6">
                             <h5 class="text-center" style="color: var(--color-ganho);"><i class="fas fa-money-check-alt"></i> Ganhos</h5>
                             <ul class="list-group list-group-flush">
                                 <?php foreach ($ganhos_list as $tipo): ?>
                                     <li class="list-group-item list-group-item-ganho d-flex justify-content-between align-items-center">
                                         <?php echo htmlspecialchars($tipo['nome']); ?>
-                                        <?php if (isset($tipo['custom'])): // Se for um item customizado do usuário, mostra o botão de deletar ?>
+                                        <?php if (isset($tipo['custom'])): ?>
                                             <a href="cadastro_tipo.php?acao=deletar&id=<?php echo $tipo['id']; ?>" class="btn btn-delete btn-sm" 
-                                               onclick="return confirm('Tem certeza que deseja excluir a categoria <?php echo htmlspecialchars($tipo['nome']); ?>? Esta ação não pode ser desfeita e pode afetar transações existentes.');">
+                                               onclick="return confirm('Tem certeza que deseja excluir a categoria <?php echo htmlspecialchars($tipo['nome']); ?>?');">
                                                 <i class="fas fa-times"></i>
                                             </a>
-                                        <?php else: // Tipo padrão ?>
+                                        <?php else: ?>
                                             <span class="badge bg-secondary">Padrão</span>
                                         <?php endif; ?>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>
-
-                        <!-- Lista de Gastos -->
                         <div class="col-md-6 mt-3 mt-md-0">
                             <h5 class="text-center" style="color: var(--color-gasto);"><i class="fas fa-shopping-cart"></i> Gastos</h5>
                             <ul class="list-group list-group-flush">
                                 <?php foreach ($gastos_list as $tipo): ?>
                                     <li class="list-group-item list-group-item-gasto d-flex justify-content-between align-items-center">
                                         <?php echo htmlspecialchars($tipo['nome']); ?>
-                                        <?php if (isset($tipo['custom'])): // Se for um item customizado do usuário, mostra o botão de deletar ?>
+                                        <?php if (isset($tipo['custom'])): ?>
                                             <a href="cadastro_tipo.php?acao=deletar&id=<?php echo $tipo['id']; ?>" class="btn btn-delete btn-sm"
-                                                onclick="return confirm('Tem certeza que deseja excluir a categoria <?php echo htmlspecialchars($tipo['nome']); ?>? Esta ação não pode ser desfeita e pode afetar transações existentes.');">
+                                                onclick="return confirm('Tem certeza que deseja excluir a categoria <?php echo htmlspecialchars($tipo['nome']); ?>?');">
                                                 <i class="fas fa-times"></i>
                                             </a>
-                                        <?php else: // Tipo padrão ?>
+                                        <?php else: ?>
                                             <span class="badge bg-secondary">Padrão</span>
                                         <?php endif; ?>
                                     </li>
@@ -218,8 +260,9 @@ $gastos_list = array_filter($todos_tipos, fn($t) => $t['tipo'] === 'D');
         </div>
 
         <div class="mt-4 text-center">
-           <a href="cadastro_tipo.php?finalizar=1" class="text-decoration-none" style="color: var(--dark-blue-primary); font-weight: 600;">
-                <i class="fas fa-home"></i> Finalizar Cadastro e Ir para a Página Inicial
+             <!-- Se for necessário ir para a home, ajuste o link aqui -->
+            <a href="pagina_inicial.php" class="text-decoration-none" >
+                <i class="fas fa-home"></i> Voltar para a Página Inicial
             </a>
         </div>
     </div>
