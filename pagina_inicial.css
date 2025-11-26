@@ -1,19 +1,39 @@
-  :root {
+ :root {
             --dark-blue-primary: #1e3a8a; 
             --dark-blue-light: #3b82f6; 
-            --color-ganho: #515bbd; 
-            --color-gasto: #0c27c0; 
+            --color-ganho: #1b358d; 
+            --color-gasto: #293497; 
             --color-bg-light: #f9fafb;
         }
-
+.navbar-custom {
+    background-color:#0D47A1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.navbar-custom .nav-link, .navbar-custom .navbar-brand {
+    color: white !important;
+    margin-left: 10px;
+}
         body {
-            background-color: var(--color-bg-light);
+            background-color: white;
             min-height: 100vh;
         }
 
         .main-container {
             max-width: 1200px;
             margin-top: 5vh;
+               background-color: white;
+        }
+
+        .card-saldo {
+            border-left: 5px solid var(--dark-blue-light);
+        }
+        
+        .card-ganho {
+            border-left: 5px solid var(--color-ganho);
+        }
+
+        .card-gasto {
+            border-left: 5px solid var(--color-gasto);
         }
 
         .btn-cadastro {
@@ -24,7 +44,7 @@
         }
 
         .btn-cadastro:hover {
-            background-color: #059669; /* Verde um pouco mais escuro */
+            background-color: #059669; 
         }
         
         .modal-header {
@@ -32,11 +52,15 @@
             color: white;
         }
 
-        .modal-title .fa-solid {
-            margin-right: 10px;
+        .table-custom th, .table-custom td {
+            vertical-align: middle;
         }
 
-        /* Estilo para destacar as opções Ganho/Gasto no formulário */
+        .text-saldo { font-size: 2.5rem; font-weight: 700; }
+        .text-ganho { color: var(--color-ganho); }
+        .text-gasto { color: var(--color-gasto); }
+        .text-success { color: var(--color-ganho) !important; }
+        .text-danger { color: var(--color-gasto) !important; }
         #tipoGanho:checked ~ label[for="tipoGanho"] {
             color: var(--color-ganho);
             font-weight: bold;

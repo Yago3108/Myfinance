@@ -31,6 +31,106 @@ if ($stmt_fetch) {
     $mensagem .= "<div class='alert alert-danger'>Erro ao buscar categorias: " . mysqli_error($conn) . "</div>";
 }
 $categorias_json = json_encode($categorias);
+$total_ganhos = 0.00;
+$total_gastos = 0.00;
+$top_ganhos = [];
+$top_gastos = [];
+
+$sql_totais = "
+    SELECT 
+        (SELECT SUM(valor) FROM ganhos WHERE idUsuario = ?) AS total_ganhos,
+        (SELECT SUM(valor) FROM gastos WHERE idUsuario = ?) AS total_gastos
+";
+$stmt_totais = mysqli_prepare($conn, $sql_totais);
+
+if ($stmt_totais) {
+    mysqli_stmt_bind_param($stmt_totais, "ii", $user_id, $user_id);
+    mysqli_stmt_execute($stmt_totais);
+    $resultado_totais = mysqli_stmt_get_result($stmt_totais);
+    $totais = mysqli_fetch_assoc($resultado_totais);
+    
+    $total_ganhos = $totais['total_ganhos'] ?? 0.00;
+    $total_gastos = $totais['total_gastos'] ?? 0.00;
+    
+    $saldo_total = $total_ganhos - $total_gastos;
+    mysqli_stmt_close($stmt_totais);
+}
+
+$sql_top_gastos = "
+    SELECT 
+        g.nome, g.valor, t.nome AS tipo_nome 
+    FROM 
+        gastos g 
+    JOIN 
+        Tipos t ON g.idTipo = t.idTipo 
+    WHERE 
+        g.idUsuario = ? 
+    ORDER BY 
+        g.valor DESC 
+    LIMIT 10
+";
+$stmt_top_gastos = mysqli_prepare($conn, $sql_top_gastos);
+if ($stmt_top_gastos) {
+    mysqli_stmt_bind_param($stmt_top_gastos, "i", $user_id);
+    mysqli_stmt_execute($stmt_top_gastos);
+    $top_gastos = mysqli_fetch_all(mysqli_stmt_get_result($stmt_top_gastos), MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt_top_gastos);
+}
+
+$sql_top_ganhos = "
+    SELECT 
+        g.nome, g.valor, t.nome AS tipo_nome 
+    FROM 
+        ganhos g 
+    JOIN 
+        Tipos t ON g.idTipo = t.idTipo 
+    WHERE 
+        g.idUsuario = ? 
+    ORDER BY 
+        g.valor DESC 
+    LIMIT 10
+";
+$stmt_top_ganhos = mysqli_prepare($conn, $sql_top_ganhos);
+if ($stmt_top_ganhos) {
+    mysqli_stmt_bind_param($stmt_top_ganhos, "i", $user_id);
+    mysqli_stmt_execute($stmt_top_ganhos);
+    $top_ganhos = mysqli_fetch_all(mysqli_stmt_get_result($stmt_top_ganhos), MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt_top_ganhos);
+}
+function formatar_moeda($valor) {
+    $abs_valor = abs($valor);
+    $sinal = $valor < 0 ? '-' : '';
+    $abreviacao = '';
+    $divisor = 1;
+    if ($abs_valor < 1000) {
+        return $sinal . 'R$ ' . number_format($abs_valor, 2, ',', '.');
+    }
+    if ($abs_valor >= 1000000) {
+        $divisor = 1000000;
+        $abreviacao = 'M';
+    } 
+    elseif ($abs_valor >= 1000) {
+        $divisor = 1000;
+        $abreviacao = 'K';
+    }
+
+    $valor_abreviado = $abs_valor / $divisor;
+    
+    $valor_formatado = number_format($valor_abreviado, 1, '.', '');
+    if (substr($valor_formatado, -2) === '.0') {
+        $valor_final = substr($valor_formatado, 0, -2);
+    } else {
+        $valor_final = str_replace('.', ',', $valor_formatado);
+    }
+
+    return "{$sinal}R$ {$valor_final}{$abreviacao}";
+}
+
+function get_saldo_class($saldo) {
+    if ($saldo > 0) return 'text-success';
+    if ($saldo < 0) return 'text-danger';
+    return 'text-secondary';
+}
 ?>
 
 <!DOCTYPE html>
@@ -41,7 +141,7 @@ $categorias_json = json_encode($categorias);
     <title>MyFinance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="pagina_inicial.css"> 
     <link rel="shortcut icon" href="myfinancefavicon.png" type="image/x-icon">
 </head>
 <body>
@@ -59,8 +159,8 @@ $categorias_json = json_encode($categorias);
                        </button>
                     </li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link" href="cadastro_tipo">Cadastrar tipos</a>
+                    <li class="nav-item ms-3">
+                        <a  class="btn btn-cadastro text-white shadow" href="cadastro_tipo.php">Cadastrar tipos</a>
                     </li>
                 </ul>
             </div>
@@ -166,11 +266,141 @@ $categorias_json = json_encode($categorias);
     });
 
 </script>
-    <section id="hero">
-        <div class="container">
-        
+   <div class="container main-container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center" style="color: var(--dark-blue-primary); font-weight: 700;">
+             </i> Página inicial
+            </h1>
         </div>
-    </section>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <?php echo $mensagem; ?>
+
+            <!-- Resumo Financeiro (Cards) -->
+            <div class="row mb-5 g-4">
+                
+                <!-- Saldo Total -->
+                <div class="col-md-4">
+                    <div class="card shadow-lg p-3 card-saldo">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-secondary">SALDO TOTAL</h5>
+                            <p class="text-saldo <?php echo get_saldo_class($saldo_total); ?>">
+                                <?php echo formatar_moeda($saldo_total); ?>
+                            </p>
+                            <i class="fas fa-wallet fa-2x <?php echo get_saldo_class($saldo_total); ?>"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total de Ganhos -->
+                <div class="col-md-4">
+                    <div class="card shadow-lg p-3 card-ganho">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-secondary">GANHOS TOTAIS</h5>
+                            <p class="text-saldo text-ganho">
+                                <?php echo formatar_moeda($total_ganhos); ?>
+                            </p>
+                            <i class="fas fa-arrow-alt-circle-up fa-2x text-ganho"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total de Gastos -->
+                <div class="col-md-4">
+                    <div class="card shadow-lg p-3 card-gasto">
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-secondary">GASTOS TOTAIS</h5>
+                            <p class="text-saldo text-gasto">
+                                <?php echo formatar_moeda($total_gastos); ?>
+                            </p>
+                            <i class="fas fa-arrow-alt-circle-down fa-2x text-gasto"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maiores Ganhos e Gastos (Tabelas) -->
+            <div class="row g-4 mb-5">
+                
+                <!-- Top Ganhos -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3 bg-white">
+                        <h4 class="card-title text-center text-ganho mb-3">
+                            <i class="fas fa-trophy"></i> Maiores Ganhos
+                        </h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped table-custom">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Transação</th>
+                                        <th>Categoria</th>
+                                        <th class="text-end">Valor (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($top_ganhos)): ?>
+                                        <?php foreach ($top_ganhos as $ganho): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($ganho['nome']); ?></td>
+                                                <td><?php echo htmlspecialchars($ganho['tipo_nome']); ?></td>
+                                                <td class="text-end fw-bold text-ganho"><?php echo formatar_moeda($ganho['valor']); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="3" class="text-center text-muted">Nenhum ganho registrado ainda.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Gastos -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3 bg-white">
+                        <h4 class="card-title text-center text-gasto mb-3">
+                            <i class="fas fa-fire-alt"></i> Maiores Gastos
+                        </h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped table-custom">
+                                <thead class="table-danger">
+                                    <tr>
+                                        <th>Transação</th>
+                                        <th>Categoria</th>
+                                        <th class="text-end">Valor (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($top_gastos)): ?>
+                                        <?php foreach ($top_gastos as $gasto): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($gasto['nome']); ?></td>
+                                                <td><?php echo htmlspecialchars($gasto['tipo_nome']); ?></td>
+                                                <td class="text-end fw-bold text-gasto"><?php echo formatar_moeda($gasto['valor']); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr><td colspan="3" class="text-center text-muted">Nenhum gasto registrado ainda.</td></tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center mb-5">
+                 <a href="cadastro_tipo.php" class="btn btn-outline-secondary"><i class="fas fa-cog"></i> Gerenciar Categorias</a>
+                 <a href="logout.php" class="btn btn-outline-danger"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            </div>
+
+        </div>
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
