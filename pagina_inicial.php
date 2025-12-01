@@ -152,15 +152,18 @@ function get_saldo_class($saldo) {
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                      <button type="button" class="btn btn-lg btn-cadastro text-white shadow" data-bs-toggle="modal" data-bs-target="#transacaoModal">
+                <ul class="navbar-nav ms-auto d-flex w-50">
+                    <li class="nav-item flex-fill text-center">
+                      <button type="button" class="btn btn-cadastro text-white shadow w-100" data-bs-toggle="modal" data-bs-target="#transacaoModal">
                     <i class="fas fa-plus-circle"></i> Cadastrar Nova Transação
                        </button>
                     </li>
                     
-                    <li class="nav-item ms-3">
-                        <a  class="btn btn-cadastro text-white shadow" href="cadastro_tipo.php">Cadastrar tipos</a>
+                    <li class="nav-item ms-3 flex-fill text-center ">
+                        <a  class="btn btn-cadastro text-white shadow w-100"  href="cadastro_tipo.php">Cadastrar tipos</a>
+                    </li>
+                         <li class="nav-item ms-3 flex-fill text-center ">
+                        <a  class="btn btn-cadastro text-white "  href="logout.php"> <i class="fas fa-right-from-bracket"></i></a>
                     </li>
                 </ul>
             </div>
@@ -279,10 +282,10 @@ function get_saldo_class($saldo) {
         <div class="col-lg-10">
             <?php echo $mensagem; ?>
 
-            <!-- Resumo Financeiro (Cards) -->
+         
             <div class="row mb-5 g-4">
                 
-                <!-- Saldo Total -->
+        
                 <div class="col-md-4">
                     <div class="card shadow-lg p-3 card-saldo">
                         <div class="card-body text-center">
@@ -295,7 +298,6 @@ function get_saldo_class($saldo) {
                     </div>
                 </div>
 
-                <!-- Total de Ganhos -->
                 <div class="col-md-4">
                     <div class="card shadow-lg p-3 card-ganho">
                         <div class="card-body text-center">
@@ -333,7 +335,7 @@ function get_saldo_class($saldo) {
                         </h4>
                         <div class="table-responsive">
                             <table class="table table-hover table-striped table-custom">
-                                <thead class="table-success">
+                                <thead class="table">
                                     <tr>
                                         <th>Transação</th>
                                         <th>Categoria</th>
@@ -366,7 +368,7 @@ function get_saldo_class($saldo) {
                         </h4>
                         <div class="table-responsive">
                             <table class="table table-hover table-striped table-custom">
-                                <thead class="table-danger">
+                                <thead class="table">
                                     <tr>
                                         <th>Transação</th>
                                         <th>Categoria</th>
@@ -393,10 +395,7 @@ function get_saldo_class($saldo) {
 
             </div>
 
-            <div class="text-center mb-5">
-                 <a href="cadastro_tipo.php" class="btn btn-outline-secondary"><i class="fas fa-cog"></i> Gerenciar Categorias</a>
-                 <a href="logout.php" class="btn btn-outline-danger"><i class="fas fa-sign-out-alt"></i> Sair</a>
-            </div>
+            
 
         </div>
     </div>

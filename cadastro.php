@@ -11,7 +11,7 @@
 <body>
   <nav class="navbar navbar-custom sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">MyFinance</a>
+            <a class="navbar-brand fw-bold" href="index.php">MyFinance</a>
     </nav>
 
 <div class="card card-myfinance">

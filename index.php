@@ -1,3 +1,11 @@
+<?php
+session_start();
+if(isset($_SESSION["idUsuario"])){
+    
+header("Location:pagina_inicial.php");
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

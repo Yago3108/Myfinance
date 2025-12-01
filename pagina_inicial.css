@@ -1,18 +1,7 @@
- :root {
-            --dark-blue-primary: #1e3a8a; 
-            --dark-blue-light: #3b82f6; 
-            --color-ganho: #1b358d; 
-            --color-gasto: #293497; 
-            --color-bg-light: #f9fafb;
+     html, body {
+            height: 100%;
         }
-.navbar-custom {
-    background-color:#0D47A1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-.navbar-custom .nav-link, .navbar-custom .navbar-brand {
-    color: white !important;
-    margin-left: 10px;
-}
+
         body {
             background-color: white;
             min-height: 100vh;
@@ -20,35 +9,38 @@
 
         .main-container {
             max-width: 1200px;
-            margin-top: 5vh;
-               background-color: white;
+            margin: 5vh auto;
+            background-color: white;
         }
 
         .card-saldo {
-            border-left: 5px solid var(--dark-blue-light);
+            border-left: 5px solid #3b82f6;
+            padding: 1.5rem !important;
         }
         
         .card-ganho {
-            border-left: 5px solid var(--color-ganho);
+            border-left: 5px solid #1b358d;
+            padding: 1.5rem !important;
         }
 
         .card-gasto {
-            border-left: 5px solid var(--color-gasto);
+            border-left: 5px solid #293497;
+            padding: 1.5rem !important;
         }
 
         .btn-cadastro {
-            background-color: var(--color-ganho);
+            background-color: #1b358d;
             border: none;
             transition: background-color 0.3s;
             font-weight: 600;
         }
 
         .btn-cadastro:hover {
-            background-color: #059669; 
+            background-color: #1b358d;
         }
         
         .modal-header {
-            background-color: var(--dark-blue-primary);
+            background-color: #1e3a8a;
             color: white;
         }
 
@@ -56,16 +48,40 @@
             vertical-align: middle;
         }
 
-        .text-saldo { font-size: 2.5rem; font-weight: 700; }
-        .text-ganho { color: var(--color-ganho); }
-        .text-gasto { color: var(--color-gasto); }
-        .text-success { color: var(--color-ganho) !important; }
-        .text-danger { color: var(--color-gasto) !important; }
+        .table-header-ganho {
+            background-color: #1b358d !important;
+            color: white;
+        }
+        .table-header-gasto {
+            background-color: #293497 !important;
+            color: white;
+        }
+
+
+        .text-saldo { 
+            font-size: 3.5rem; 
+            font-weight: 700; 
+        }
+        
+        .text-ganho { color: #1b358d; }
+        .text-gasto { color: #293497; }
+        .text-success { color: #1b358d !important; }
+        .text-danger { color: #293497 !important; }
+
         #tipoGanho:checked ~ label[for="tipoGanho"] {
-            color: var(--color-ganho);
+            color: #1b358d;
             font-weight: bold;
         }
         #tipoGasto:checked ~ label[for="tipoGasto"] {
-            color: var(--color-gasto);
+            color: #293497;
             font-weight: bold;
+        }
+        
+        .navbar-custom {
+            background-color:#0D47A1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-custom .nav-link, .navbar-custom .navbar-brand {
+            color: rgb(36, 18, 117) !important;
+            margin-left: 10px;
         }

@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         
         } else {
-            echo "<script>alert('Email ou senha inválidos.'); window.location.href = 'index.html';</script>";
+            echo "<script>alert('Email ou senha inválidos.'); window.location.href = 'index.php';</script>";
         }
     } else {
         die("Erro fatal na consulta: " . mysqli_error($conn));
