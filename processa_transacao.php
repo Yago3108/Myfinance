@@ -39,7 +39,7 @@ if ($tipo === 'G') {
 }
 
 if (empty($tabela)) {
-    header("Location: index.php?status=erro&msg=" . urlencode("Erro: Tipo de transação (G/D) inválido."));
+    header("Location: pagina_inicial.php?status=erro&msg=" . urlencode("Erro: Tipo de transação (G/D) inválido."));
     exit();
 }
 $sql = "INSERT INTO $tabela (idTipo, idUsuario, nome, descricao, valor, dataTransacao) VALUES (?, ?, ?, ?, ?, ?)";

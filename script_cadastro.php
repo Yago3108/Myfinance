@@ -35,7 +35,7 @@
             echo "erro não foi cadastrado";
          }
         ?>
-        <a href="index.html" class="btn btn-register w-100">Voltar</a>
+        <a href="index.php" class="btn btn-register w-100">Voltar</a>
     </div>
 </div>
 

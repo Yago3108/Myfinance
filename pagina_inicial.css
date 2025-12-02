@@ -59,7 +59,7 @@
 
 
         .text-saldo { 
-            font-size: 3.5rem; 
+            font-size: 2.5rem; 
             font-weight: 700; 
         }
         
@@ -76,12 +76,13 @@
             color: #293497;
             font-weight: bold;
         }
-        
         .navbar-custom {
             background-color:#0D47A1;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .navbar-custom .nav-link, .navbar-custom .navbar-brand {
-            color: rgb(36, 18, 117) !important;
-            margin-left: 10px;
+        .navbar-custom .nav-link, .navbar-custom  .navbar-brand{
+
+            margin-left: 10px;}
+        .navbar-brand{
+            color: white;
         }
